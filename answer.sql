@@ -1,39 +1,39 @@
--- Week 4 Database Assignment — DRAFT
--- Based on the visible lesson titles: Aggregations and Grouping Logic, Handling NULL Value.
--- The Academy assignment page is locked, so compare these examples with the exact questions before using them.
+-- Week 4 Database Assignment: Advanced SQL Queries and Aggregations
+-- Database: classicmodels (MySQL)
 
-USE sales;
+USE classicmodels;
 
--- Aggregate order counts by order status.
-SELECT status, COUNT(*) AS order_count
-FROM orders
-GROUP BY status
-ORDER BY order_count DESC;
-
--- Calculate each customer's order count and total sales value.
--- LEFT JOIN keeps customers who have no orders; COALESCE displays zero instead of NULL.
+-- Question 1: Total payment amount for each date; show the 5 latest dates.
 SELECT
-    c.customerNumber,
-    c.customerName,
-    COUNT(DISTINCT o.orderNumber) AS order_count,
-    COALESCE(SUM(od.quantityOrdered * od.priceEach), 0) AS total_sales
-FROM customers AS c
-LEFT JOIN orders AS o
-    ON o.customerNumber = c.customerNumber
-LEFT JOIN orderdetails AS od
-    ON od.orderNumber = o.orderNumber
-GROUP BY c.customerNumber, c.customerName
-HAVING COALESCE(SUM(od.quantityOrdered * od.priceEach), 0) > 0
-ORDER BY total_sales DESC;
+    paymentDate,
+    SUM(amount) AS total_amount
+FROM payments
+GROUP BY paymentDate
+ORDER BY paymentDate DESC
+LIMIT 5;
 
--- Replace missing phone values with a readable label.
+-- Question 2: Average credit limit by customer name and country.
 SELECT
-    customerNumber,
     customerName,
-    COALESCE(phone, 'Not provided') AS phone
-FROM customers;
-
--- Example of filtering for missing values directly.
-SELECT customerNumber, customerName
+    country,
+    AVG(creditLimit) AS average_credit_limit
 FROM customers
-WHERE phone IS NULL;
+GROUP BY customerName, country
+ORDER BY customerName, country;
+
+-- Question 3: Total line-item price by product code and quantity ordered.
+SELECT
+    productCode,
+    quantityOrdered,
+    SUM(quantityOrdered * priceEach) AS total_price
+FROM orderdetails
+GROUP BY productCode, quantityOrdered
+ORDER BY productCode, quantityOrdered;
+
+-- Question 4: Highest payment amount for each check number.
+SELECT
+    checkNumber,
+    MAX(amount) AS highest_amount
+FROM payments
+GROUP BY checkNumber
+ORDER BY checkNumber;
